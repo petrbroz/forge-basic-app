@@ -1,6 +1,8 @@
 # forge-basic-app
 
-Sample application showing the basic usage of Autodesk Forge.
+Sample application showing the basic usage of [Autodesk Forge](https://forge.autodesk.com).
+
+![Screenshot](./screenshot.jpg)
 
 ## Getting Started
 
@@ -42,3 +44,5 @@ you can setup a launch task with all env. variables preconfigured:
     ]
 }
 ```
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)

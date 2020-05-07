@@ -1,14 +1,18 @@
 {
   "name": "forge-basic-app",
   "version": "0.0.1",
-  "description": "Basic Autodesk Forge application.",
+  "description": "Sample application showing the basic usage of Autodesk Forge.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=12.16.3"
+  },
   "keywords": [
     "autodesk",
-    "forge"
+    "forge",
+    "express"
   ],
   "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
