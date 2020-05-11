@@ -46,7 +46,7 @@ async function initSelectUI() {
     const designs = document.getElementById('designs');
     designs.setAttribute('disabled', 'true');
     designs.innerHTML = '';
-    const resp = await fetch('/api/docs');
+    const resp = await fetch('/api/models');
     if (resp.ok) {
         const documents = await resp.json();
         for (const doc of documents) {
@@ -73,7 +73,7 @@ async function initUploadUI() {
                 const entrypoint = window.prompt('Please enter the name of the entry filename inside the ZIP archive.');
                 data.append('entrypoint-in-zip', entrypoint);
             }
-            const resp = await fetch('/api/docs', { method: 'POST', body: data });
+            const resp = await fetch('/api/models', { method: 'POST', body: data });
             if (resp.ok) {
                 initSelectUI();
             } else {

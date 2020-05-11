@@ -17,7 +17,7 @@ async function ensureBucketExists() {
     }
 }
 
-// GET /api/docs
+// GET /api/models
 // Lists all designs available in an app-specific bucket.
 router.get('/', async (req, res) => {
     try {
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /api/docs
+// POST /api/models
 // Uploads new design to an app-specific bucket.
 router.post('/', (req, res, next) => {
     const form = formidable({ multiples: true });

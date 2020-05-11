@@ -9,6 +9,6 @@ if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET || !FORGE_BUCKET) {
 
 let app = express();
 app.use(express.static('public'));
-app.use('/api/docs', require('./routes/docs'));
+app.use('/api/models', require('./routes/models'));
 app.use('/api/auth', require('./routes/auth'));
 app.listen(port, () => console.log(`Server listening on port ${port}...`));
