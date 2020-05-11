@@ -13,13 +13,11 @@ Sample application showing the basic usage of [Autodesk Forge](https://forge.aut
     ```
     export FORGE_CLIENT_ID=<your client id>
     export FORGE_CLIENT_SECRET=<your client secret>
-    export FORGE_BUCKET=<your bucket name>
     ```
   - on Windows:
     ```
     set FORGE_CLIENT_ID=<your client id>
     set FORGE_CLIENT_SECRET=<your client secret>
-    set FORGE_BUCKET=<your bucket name>
     ```
 - run the server: `node server.js`
 
@@ -37,8 +35,7 @@ you can setup a launch task with all env. variables preconfigured:
             "program": "${workspaceFolder}/server.js",
             "env": {
                 "FORGE_CLIENT_ID": "<your client id>",
-                "FORGE_CLIENT_SECRET": "<your client secret>",
-                "FORGE_BUCKET": "<your bucket name>"
+                "FORGE_CLIENT_SECRET": "<your client secret>"
             }
         }
     ]

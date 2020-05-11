@@ -1,8 +1,8 @@
 const express = require('express');
 
 const port = process.env.PORT || 3000;
-const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
-if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET || !FORGE_BUCKET) {
+const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET } = process.env;
+if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
     console.warn('Missing some of the environment variables.');
     return;
 }

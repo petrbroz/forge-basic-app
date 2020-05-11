@@ -15,9 +15,6 @@
         },
         "FORGE_CLIENT_SECRET": {
             "description": "Your Forge applicaton client secret"
-        },
-        "FORGE_BUCKET": {
-            "description": "Your Forge applicaton data bucket"
         }
     }
 }
