@@ -4,7 +4,7 @@ const formidable = require('formidable');
 const { DataManagementClient, ModelDerivativeClient, DataRetentionPolicy, urnify } = require('forge-server-utils');
 
 const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET } = process.env;
-const BUCKET = `${FORGE_CLIENT_ID}-myfirstapp`;
+const BUCKET = `${FORGE_CLIENT_ID}-myfirstapp`.toLowerCase();
 
 let auth = { client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET };
 let dataManagementClient = new DataManagementClient(auth);
@@ -13,7 +13,7 @@ let router = express.Router();
 
 async function ensureBucketExists() {
     const buckets = await dataManagementClient.listBuckets();
-    if (!buckets.find(bucket => bucket.bucketKey === BUCKET)) {
+    if (!buckets.find(bucket => bucket.bucketKey.toLowerCase() === BUCKET)) {
         await dataManagementClient.createBucket(BUCKET, DataRetentionPolicy.Temporary);
     }
 }
