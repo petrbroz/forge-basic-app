@@ -1,3 +1,5 @@
+DEBUG_SHADERS = true;
+
 window.addEventListener('DOMContentLoaded', async function() {
     const [viewer, ...rest] = await Promise.all([initViewer(), initSelectUI(), initUploadUI()]);
     const designs = document.getElementById('designs');
@@ -21,7 +23,10 @@ async function initViewer() {
     };
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer(options, function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+            const config = {
+                extensions: ['HeatmapExtension']
+            };
+            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), config);
             viewer.start();
             resolve(viewer);
         });
