@@ -27,7 +27,11 @@ async function initViewer() {
                 extensions: ['HeatmapExtension']
             };
             const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), config);
-            viewer.start();
+            viewer.start(undefined, undefined, undefined, undefined, {
+                webglInitParams: {
+                    useWebGL2: false
+                }
+            });
             resolve(viewer);
         });
     });
