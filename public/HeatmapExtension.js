@@ -1,5 +1,4 @@
-const SensorCount = 25;
-const AreaScale = 500.0;
+const SensorCount = 16;
 
 const HeatmapVertexShader = `
 varying vec4 vWorldPos;
@@ -14,6 +13,41 @@ uniform vec3 uSensorPositions[${SensorCount}];
 uniform float uSensorValues[${SensorCount}];
 varying vec4 vWorldPos;
 
+#ifdef _LMVWEBGL2_
+    #if defined(MRT_NORMALS)
+        layout(location = 1) out vec4 outNormal;
+
+        #if defined(MRT_ID_BUFFER)
+            layout(location = 2) out vec4 outId;
+            #if defined(MODEL_COLOR)
+                layout(location = 3) out vec4 outModelId;
+            #endif
+        #endif
+    #elif defined(MRT_ID_BUFFER)
+        layout(location = 1) out vec4 outId;
+        #if defined(MODEL_COLOR)
+            layout(location = 2) out vec4 outModelId;
+        #endif
+    #endif
+#else
+    #define gl_FragColor gl_FragData[0]
+    #if defined(MRT_NORMALS)
+        #define outNormal gl_FragData[1]
+
+        #if defined(MRT_ID_BUFFER)
+            #define outId gl_FragData[2]
+            #if defined(MODEL_COLOR)
+                #define outModelId gl_FragData[3]
+            #endif
+        #endif
+    #elif defined(MRT_ID_BUFFER)
+        #define outId gl_FragData[1]
+        #if defined(MODEL_COLOR)
+            #define outModelId gl_FragData[2]
+        #endif
+    #endif
+#endif
+
 vec3 val_to_heat(float val) {
     float r = min(2.0 * val, 1.0);
     float g = min(2.0 * (1.0 - val), 1.0);
@@ -23,76 +57,149 @@ vec3 val_to_heat(float val) {
 void main() {
     float sum = 0.0;
     for (int i = 0; i < ${SensorCount}; i++) {
-        sum += 5.0 * uSensorValues[i] / distance(vWorldPos.xyz, uSensorPositions[i]);
+        sum += 15.0 * uSensorValues[i] / distance(vWorldPos.xyz, uSensorPositions[i]);
     }
     gl_FragColor = vec4(val_to_heat(clamp(sum, 0.0, 1.0)), 1.0);
+
+    #ifdef MRT_ID_BUFFER
+        outId = vec4(0.0);
+    #endif
+    #ifdef MODEL_COLOR
+        outModelId = vec4(0.0);
+    #endif
+    #ifdef MRT_NORMALS
+        outNormal = vec4(0.0);
+    #endif
 }
 `;
 
 class HeatmapExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
+        this._button = null;
+        this._material = null;
+        this._timer = null;
+        this._fragMaterialCache = {};
     }
 
     load() {
-        this.initMaterial();
-        this.timer = setInterval(this.updateMaterial.bind(this), 500);
+        if (this.viewer.toolbar && !this._button) {
+            this._createUI();
+        }
+        this._initShaderMaterial();
         console.log('Heatmap extension loaded.');
         return true;
     }
 
     unload() {
-        clearInterval(this.timer);
+        if (this._button) {
+            this._removeUI();
+        }
+        if (this._timer) {
+            this._deactivate();
+        }
         console.log('Heatmap extension unloaded.');
         return true;
     }
 
-    initMaterial() {
-        this.sensorPositions = [];
-        this.sensorValues = [];
-        for (let i = 0; i < SensorCount; i++) {
-            this.sensorPositions.push(new THREE.Vector3(Math.random() * AreaScale, Math.random() * AreaScale, 0.0));
-            this.sensorValues.push(Math.random());
+    onToolbarCreated() {
+        if (!this._button) {
+            this._createUI();
         }
+    }
 
-        this.material = new THREE.ShaderMaterial({
+    _createUI() {
+        this._button = new Autodesk.Viewing.UI.Button('heatmapExtensionButton');
+        this._button.onClick = (ev) => {
+            if (!this._timer) {
+                this._activate();
+            } else {
+                this._deactivate();
+            }
+        };
+        this._button.setToolTip('Heatmap Extension');
+        const group = this.viewer.toolbar.getControl('modelTools');
+        group.addControl(this._button);
+    }
+
+    _removeUI() {
+        const group = this.viewer.toolbar.getControl('modelTools');
+        group.removeControl(this._button);
+        this._button = null;
+    }
+
+    _activate() {
+        const model = this.viewer.model;
+        model.unconsolidate();
+        this._resetHeatmapData(model.getBoundingBox());
+        const tree = model.getInstanceTree();
+        const frags = model.getFragmentList();
+        const dbids = this.viewer.getSelection();
+        for (const dbid of dbids) {
+            tree.enumNodeFragments(dbid, (fragId) => {
+                this._fragMaterialCache[fragId] = frags.getMaterial(fragId);
+                frags.setMaterial(fragId, this._material);
+            });
+        }
+        this.viewer.clearSelection();
+        this._timer = setInterval(this._updateHeatmapData.bind(this), 500);
+        this._button.addClass('active');
+    }
+
+    _deactivate() {
+        const model = this.viewer.model;
+        const frags = model.getFragmentList();
+        for (const fragId of Object.keys(this._fragMaterialCache)) {
+            frags.setMaterial(fragId, this._fragMaterialCache[fragId]);
+        }
+        this._fragMaterialCache = {};
+        clearInterval(this._timer);
+        this._timer = null;
+        this._button.removeClass('active');
+        this.viewer.impl.sceneUpdated();
+    }
+
+    _initShaderMaterial() {
+        const sensorPositions = [];
+        const sensorValues = [];
+        for (let i = 0; i < SensorCount; i++) {
+            sensorPositions.push(new THREE.Vector3(0.0, 0.0, 0.0));
+            sensorValues.push(0.0);
+        }
+        this._material = new THREE.ShaderMaterial({
             uniforms: {
-                uSensorPositions: { type: 'v3v', value: this.sensorPositions },
-                uSensorValues: { type: 'fv1', value: this.sensorValues }
+                uSensorPositions: { type: 'v3v', value: sensorPositions },
+                uSensorValues: { type: 'fv1', value: sensorValues }
             },
             vertexShader: HeatmapVertexShader,
             fragmentShader: HeatmapFragmentShader
         });
+        this._material.supportsMrtNormals = true;
+        this._material.side = THREE.DoubleSide;
         const materialManager = this.viewer.impl.matman();
-        materialManager.addMaterial('heatmap', this.material, true);
+        materialManager.addMaterial('heatmap', this._material, true);
     }
 
-    updateMaterial() {
+    _resetHeatmapData(bbox) {
         for (let i = 0; i < SensorCount; i++) {
-            const pos = this.material.uniforms.uSensorPositions.value[i];
-            pos.x += 5.0 * (Math.random() - 0.5);
-            pos.y += 5.0 * (Math.random() - 0.5);
-            pos.z += 5.0 * (Math.random() - 0.5);
-            this.material.uniforms.uSensorValues.value[i] += 0.1 * (Math.random() - 0.5);
+            const pos = this._material.uniforms.uSensorPositions.value[i];
+            pos.x = bbox.min.x + Math.random() * (bbox.max.x - bbox.min.x);
+            pos.y = bbox.min.y + Math.random() * (bbox.max.y - bbox.min.y);
+            pos.z = bbox.min.z + Math.random() * (bbox.max.z - bbox.min.z);
+            this._material.uniforms.uSensorValues.value[i] = Math.random();
         }
-        this.material.needsUpdate = true;
         this.viewer.impl.sceneUpdated();
     }
 
-    onClick() {
-        const model = this.viewer.model;
-        if (model) {
-            model.unconsolidate();
-            const tree = model.getInstanceTree();
-            const frags = model.getFragmentList();
-            const dbids = this.viewer.getSelection();
-            this.viewer.clearSelection();
-            for (const dbid of dbids) {
-                tree.enumNodeFragments(dbid, (fragId) => {
-                    frags.setMaterial(fragId, this.material);
-                });
-            }
+    _updateHeatmapData() {
+        for (let i = 0; i < SensorCount; i++) {
+            const pos = this._material.uniforms.uSensorPositions.value[i];
+            pos.x += 5.0 * (Math.random() - 0.5);
+            pos.y += 5.0 * (Math.random() - 0.5);
+            pos.z += 5.0 * (Math.random() - 0.5);
+            this._material.uniforms.uSensorValues.value[i] += 0.1 * (Math.random() - 0.5);
         }
+        this.viewer.impl.sceneUpdated();
     }
 }
 

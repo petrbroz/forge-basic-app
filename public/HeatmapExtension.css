@@ -1,0 +1,11 @@
+#heatmapExtensionButton {
+    background-image: url(https://img.icons8.com/plasticine/100/000000/heat-map.png);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: grayscale(100%);
+}
+
+#heatmapExtensionButton.active {
+    filter: none;
+}
