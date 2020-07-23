@@ -1,8 +1,8 @@
-# forge-basic-app
+# forge-basic-app: Heatmap Demo
 
 Sample application showing the basic usage of [Autodesk Forge](https://forge.autodesk.com).
 
-![Screenshot](./screenshot.jpg)
+![Screenshot](./preview.gif)
 
 ## Getting Started
 

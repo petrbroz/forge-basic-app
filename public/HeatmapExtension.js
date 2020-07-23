@@ -1,12 +1,3 @@
-/*
-Forge Viewer extension for visualizing sensory data as a heatmap on selected objects.
-
-After clicking this extension's button in the viewer toolbar, a custom shader material
-is applied to all selected objects, showing a dynamic heatmap based on a hard-coded
-number of sensors with changing world coordinates and "strengths" (values between 0.0 and 1.0).
-After clicking the button again, the custom material is removed.
-*/
-
 // Number of sensors to compute the heatmap from
 // (note that the number of WebGL inputs is limited: http://math.hws.edu/graphicsbook/demos/c6/webgl-limits.html)
 const SensorCount = 16; 
@@ -84,6 +75,14 @@ void main() {
 }
 `;
 
+/*
+Forge Viewer extension for visualizing sensory data as a heatmap on selected objects.
+
+After clicking this extension's button in the viewer toolbar, a custom shader material
+is applied to all selected objects, showing a dynamic heatmap based on a hard-coded
+number of sensors with changing world coordinates and "strengths" (values between 0.0 and 1.0).
+After clicking the button again, the custom material is removed.
+*/
 class HeatmapExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
