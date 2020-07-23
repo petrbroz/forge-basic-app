@@ -6,7 +6,7 @@ if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
     process.exit(1);
 }
 
-const BUCKET = 'petrbroz-samples'; // `${FORGE_CLIENT_ID.toLowerCase()}-myfirstapp`;
+const BUCKET = `${FORGE_CLIENT_ID.toLowerCase()}-myfirstapp`;
 let authClient = new AuthenticationClient(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET);
 let dataManagementClient = new DataManagementClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
 let modelDerivativeClient = new ModelDerivativeClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
