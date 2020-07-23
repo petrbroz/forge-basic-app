@@ -1,4 +1,15 @@
-const SensorCount = 16;
+/*
+Forge Viewer extension for visualizing sensory data as a heatmap on selected objects.
+
+After clicking this extension's button in the viewer toolbar, a custom shader material
+is applied to all selected objects, showing a dynamic heatmap based on a hard-coded
+number of sensors with changing world coordinates and "strengths" (values between 0.0 and 1.0).
+After clicking the button again, the custom material is removed.
+*/
+
+// Number of sensors to compute the heatmap from
+// (note that the number of WebGL inputs is limited: http://math.hws.edu/graphicsbook/demos/c6/webgl-limits.html)
+const SensorCount = 16; 
 
 const HeatmapVertexShader = `
 varying vec4 vWorldPos;
@@ -76,10 +87,10 @@ void main() {
 class HeatmapExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
-        this._button = null;
-        this._material = null;
-        this._timer = null;
-        this._fragMaterialCache = {};
+        this._button = null; // button in the viewer toolbar for activating our extension
+        this._material = null; // custom shader material
+        this._timer = null; // ID of an `setInterval` updating the heatmap data
+        this._fragMaterialCache = {}; // cache of original fragment materials replaced by our material
     }
 
     load() {
@@ -159,6 +170,7 @@ class HeatmapExtension extends Autodesk.Viewing.Extension {
         this.viewer.impl.sceneUpdated();
     }
 
+    // Initializes custom shader material.
     _initShaderMaterial() {
         const sensorPositions = [];
         const sensorValues = [];
@@ -180,6 +192,7 @@ class HeatmapExtension extends Autodesk.Viewing.Extension {
         materialManager.addMaterial('heatmap', this._material, true);
     }
 
+    // Regenerates random sensor positions and strengths based on model bounding box.
     _resetHeatmapData(bbox) {
         for (let i = 0; i < SensorCount; i++) {
             const pos = this._material.uniforms.uSensorPositions.value[i];
@@ -191,6 +204,7 @@ class HeatmapExtension extends Autodesk.Viewing.Extension {
         this.viewer.impl.sceneUpdated();
     }
 
+    // Modifies sensor positions and strenghts by small random offsets.
     _updateHeatmapData() {
         for (let i = 0; i < SensorCount; i++) {
             const pos = this._material.uniforms.uSensorPositions.value[i];
