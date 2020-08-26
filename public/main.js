@@ -24,7 +24,7 @@ async function initViewer() {
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer(options, function () {
             const config = {
-                extensions: ['HeatmapExtension']
+                extensions: ['CustomTextureExtension']
             };
             const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), config);
             viewer.start();

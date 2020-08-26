@@ -1,0 +1,18 @@
+#plannarMappingTextureButton, #sphericalMappingTextureButton {
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: grayscale(100%);
+}
+
+#plannarMappingTextureButton {
+    background-image: url(/box.png);
+}
+
+#sphericalMappingTextureButton {
+    background-image: url(/sphere.png);
+}
+
+#plannarMappingTextureButton.active, #sphericalMappingTextureButton.active {
+    filter: none;
+}
