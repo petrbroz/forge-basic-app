@@ -21,7 +21,7 @@ async function initViewer() {
     };
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer(options, function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), { extensions: ['DrawBoundsToolExtension'] });
             viewer.start();
             resolve(viewer);
         });

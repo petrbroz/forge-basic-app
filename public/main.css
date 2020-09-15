@@ -37,3 +37,10 @@ span.title {
     font-size: 2em;
     padding-left: 0.5em;
 }
+
+#draw-bounds-tool-button {
+    background-image: url(/polygon.png);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
