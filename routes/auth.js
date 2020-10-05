@@ -7,7 +7,7 @@ let router = express.Router();
 // Generates a two-legged token to be used by Forge Viewer.
 router.get('/token', async function (req, res) {
     try {
-        res.json(await getPublicToken());
+        res.header('Access-Control-Allow-Origin', '*').json(await getPublicToken());
     } catch(err) {
         console.error(err);
         res.status(500).send(err.message);
