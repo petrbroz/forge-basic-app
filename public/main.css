@@ -12,28 +12,10 @@ body, html {
 #overlay {
     position: absolute;
     top: 1em;
-    left: 1em;
+    right: 1em;
     z-index: 1;
     padding: 0.5em;
     background-color: rgba(196, 196, 196, 0.5);
     border-radius: 0.5em;
     backdrop-filter: blur(5px);
-}
-
-#overlay .flex {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-}
-
-img.logo {
-    height: 2em;
-}
-
-span.title {
-    font-size: 2em;
-    padding-left: 0.5em;
 }

@@ -1,10 +1,23 @@
 window.addEventListener('DOMContentLoaded', async function() {
-    const [viewer, ...rest] = await Promise.all([initViewer(), initSelectUI(), initUploadUI()]);
-    const designs = document.getElementById('designs');
-    designs.addEventListener('change', function () {
-        loadModel(viewer, designs.value);
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('urn') || !params.get('guid')) {
+        document.body.innerHTML = 'Provide the <em>urn</em> and <em>guid</em> of your design as URL parameters.';
+        return;
+    }
+
+    const viewer = await initViewer();
+    await loadModel(viewer, params.get('urn'), params.get('guid'));
+
+    // Load custom markup code *after* the viewer (with the Markup extension) is initialized
+    const script = document.createElement('script');
+    script.setAttribute('src', '/smiley-markup.js');
+    document.body.appendChild(script);
+    document.getElementById('draw-smiley').addEventListener('click', async function () {
+        const markupExt = viewer.getExtension('Autodesk.Viewing.MarkupsCore');
+        markupExt.show();
+        markupExt.enterEditMode();
+        markupExt.changeEditMode(new EditModeSmiley(markupExt));
     });
-    loadModel(viewer, designs.value);
 });
 
 async function initViewer() {
@@ -21,17 +34,20 @@ async function initViewer() {
     };
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer(options, function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+            const config = {
+                extensions: ['Autodesk.Viewing.MarkupsCore', 'Autodesk.Viewing.MarkupsGui']
+            };
+            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), config);
             viewer.start();
             resolve(viewer);
         });
     });
 }
 
-async function loadModel(viewer, urn) {
+async function loadModel(viewer, urn, guid) {
     return new Promise(function (resolve, reject) {
         function onDocumentLoadSuccess(doc) {
-            viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+            viewer.loadDocumentNode(doc, doc.getRoot().findByGuid(guid));
             resolve();
         }
         function onDocumentLoadFailure(code, message) {
@@ -39,46 +55,5 @@ async function loadModel(viewer, urn) {
             reject(message);
         }
         Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
-    });
-}
-
-async function initSelectUI() {
-    const designs = document.getElementById('designs');
-    designs.setAttribute('disabled', 'true');
-    designs.innerHTML = '';
-    const resp = await fetch('/api/models');
-    if (resp.ok) {
-        const documents = await resp.json();
-        for (const doc of documents) {
-            const option = document.createElement('option');
-            option.innerText = doc.name;
-            option.setAttribute('value', doc.id);
-            designs.appendChild(option);
-        }
-    } else {
-        console.error(await resp.text());
-    }
-    designs.removeAttribute('disabled');
-}
-
-async function initUploadUI() {
-    const input = document.getElementById('input');
-    const btn = document.getElementById('upload');
-    btn.addEventListener('click', async function () {
-        if (input.files.length > 0) {
-            const file = input.files[0];
-            let data = new FormData();
-            data.append('file', file);
-            if (file.name.endsWith('.zip')) {
-                const entrypoint = window.prompt('Please enter the name of the entry filename inside the ZIP archive.');
-                data.append('entrypoint-in-zip', entrypoint);
-            }
-            const resp = await fetch('/api/models', { method: 'POST', body: data });
-            if (resp.ok) {
-                initSelectUI();
-            } else {
-                console.error(await resp.text());
-            }
-        }
     });
 }
