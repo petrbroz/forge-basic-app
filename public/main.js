@@ -1,6 +1,6 @@
 window.addEventListener('DOMContentLoaded', async function() {
     const viewer = await initViewer();
-    const models = await initModelDropdown();
+    const models = await initModelSelection();
     models.addEventListener('change', function () {
         window.location.hash = models.value;
         loadModel(viewer, models.value);
@@ -11,6 +11,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     if (models.value) {
         loadModel(viewer, models.value);
     }
+    initModelUpload();
 });
 
 async function initViewer() {
@@ -36,7 +37,7 @@ async function initViewer() {
     });
 }
 
-async function initModelDropdown() {
+async function initModelSelection() {
     const models = document.getElementById('models');
     models.setAttribute('disabled', 'true');
     models.innerHTML = '';
@@ -55,6 +56,36 @@ async function initModelDropdown() {
     }
     models.removeAttribute('disabled');
     return models;
+}
+
+async function initModelUpload() {
+    const button = document.getElementById('upload');
+    const input = document.getElementById('input');
+    button.addEventListener('click', async function () {
+        input.click();
+    });
+    input.addEventListener('change', async function () {
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            let data = new FormData();
+            data.append('model-name', file.name);
+            data.append('model-file', file);
+            if (file.name.endsWith('.zip')) {
+                const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
+                data.append('model-entrypoint', entrypoint);
+            }
+            button.setAttribute('disabled', 'true');
+            const resp = await fetch('/api/models', { method: 'POST', body: data });
+            if (resp.ok) {
+                input.value = '';
+                initModelSelection();
+            } else {
+                alert('Could not upload model. See the console for more details.');
+                console.error(await resp.text());
+            }
+            button.removeAttribute('disabled');
+        }
+    });
 }
 
 function loadModel(viewer, urn) {

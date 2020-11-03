@@ -27,11 +27,14 @@ router.get('/api/models', async (req, res) => {
 
 router.post('/api/models', async (req, res) => {
     if (!req.fields['model-name'] || !req.files['model-file']) {
-        res.status(400).send('The request is missing one of the required fields ("model-name", "model-file").');
+        res.status(400).send('Some of the required fields ("model-name", "model-file") are missing.');
         return;
     }
     try {
-        await uploadModel(req.fields['model-name'], fs.readFileSync(req.files['model-file'].path));
+        await uploadModel(
+            req.fields['model-name'],
+            fs.readFileSync(req.files['model-file'].path),
+            req.fields['model-entrypoint']);
         res.status(200).end();
     } catch (err) {
         console.error(err);

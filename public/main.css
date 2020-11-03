@@ -25,7 +25,7 @@ body, html {
     margin-right: 0.5em;
 }
 
-#header .logo {
+#header .logo, #models, #upload {
     height: 2em;
 }
 
@@ -37,6 +37,12 @@ body, html {
     min-width: 0; /* Reset the input's "intrinsic" width */
     flex: 0 1 auto;
     font-family: ArtifaktElement;
+    font-size: 1em;
+}
+
+#upload {
+    width: 2em;
+    margin-left: 0;
     font-size: 1em;
 }
 

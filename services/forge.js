@@ -64,17 +64,22 @@ async function ensureBucketExists() {
     }
 }
 
-async function uploadModel(objectName, buffer) {
+async function uploadModel(objectName, buffer, rootFilename) {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
     const response = await new ObjectsApi().uploadObject(BUCKET, objectName, buffer.byteLength, buffer, {}, null, token);
-    await new DerivativesApi().translate({
+    const job = {
         input: {
             urn: urnify(response.body.objectId)
         },
         output: {
             formats: [{ type: 'svf', views: ['2d', '3d'] }]
         }
-    }, {}, null, token);
+    };
+    if (rootFilename) {
+        job.input.compressedUrn = true;
+        job.input.rootFilename = rootFilename;
+    }
+    await new DerivativesApi().translate(job, {}, null, token);
 }
 
 module.exports = {
