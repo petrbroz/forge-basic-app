@@ -11,6 +11,12 @@ const INTERNAL_TOKEN_SCOPES = ['bucket:read', 'bucket:create', 'data:read'];
 
 let _tokens = new Map();
 
+/**
+ * Generates access token for given set of scopes.
+ * @async
+ * @param {string[]} scopes List of scopes (https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/scopes).
+ * @returns {Promise} Credentials object with properties such as `access_token`, `token_type`, and `expires_in`.
+ */
 async function getAccessToken(scopes) {
     const key = scopes.join(',');
     let token = _tokens.get(key);
@@ -28,10 +34,20 @@ async function getAccessToken(scopes) {
     };
 }
 
+/**
+ * Generates access token with limited capabilities that can be shared with the client side code.
+ * @async
+ * @returns {Promise} Credentials object with properties such as `access_token`, `token_type`, and `expires_in`.
+ */
 async function getPublicToken() {
     return getAccessToken(PUBLIC_TOKEN_SCOPES);
 }
 
+/**
+ * Lists all objects available in pre-configured bucket in the Data Management service.
+ * @async
+ * @returns {Promise} List of objects, each with properties `name` and `id` (containing the model's URN).
+ */
 async function listModels() {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
     let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
@@ -47,6 +63,11 @@ async function listModels() {
     }));
 }
 
+/**
+ * Checks whether the pre-configured bucket already exists in the Data Management service,
+ * and if not, attempts to create it.
+ * @async
+ */
 async function ensureBucketExists() {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
     try {

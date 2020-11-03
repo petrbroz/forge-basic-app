@@ -1,10 +1,9 @@
-window.addEventListener('DOMContentLoaded', async function() {
-    const viewer = await initViewer();
-    const models = await initModelDropdown();
-    models.addEventListener('change', function () {
-        window.location.hash = models.value;
-        loadModel(viewer, models.value);
-    });
+Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
+    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+    viewer.start();
+    viewer.setTheme('light-theme');
+    const models = await initModelSelection();
+    models.addEventListener('change', () => loadModel(viewer, models.value));
     if (window.location.hash) {
         models.value = window.location.hash.substr(1);
     }
@@ -13,30 +12,28 @@ window.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-async function initViewer() {
-    const options = {
-        getAccessToken: async function (callback) {
-            const resp = await fetch('/api/auth/token');
-            if (resp.ok) {
-                const token = await resp.json();
-                callback(token.access_token, token.expires_in);
-            } else {
-                alert('Could not obtain access token. See the console for more details.');
-                console.error(await resp.text());
-            }
-        }
-    };
-    return new Promise(function (resolve, reject) {
-        Autodesk.Viewing.Initializer(options, function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
-            viewer.start();
-            viewer.setTheme('light-theme');
-            resolve(viewer);
-        });
-    });
+/**
+ * Retrieves access token required for viewing models.
+ * @async
+ * @param {function} callback Callback function to be called with access token and expiration time (in seconds).
+ */
+async function getAccessToken(callback) {
+    const resp = await fetch('/api/auth/token');
+    if (resp.ok) {
+        const { access_token, expires_in } = await resp.json();
+        callback(access_token, expires_in);
+    } else {
+        alert('Could not obtain access token. See the console for more details.');
+        console.error(await resp.text());
+    }
 }
 
-async function initModelDropdown() {
+/**
+ * Initializes the model selection UI.
+ * @async
+ * @returns {Promise} The HTML select element populated with available models.
+ */
+async function initModelSelection() {
     const models = document.getElementById('models');
     models.setAttribute('disabled', 'true');
     models.innerHTML = '';
@@ -57,6 +54,11 @@ async function initModelDropdown() {
     return models;
 }
 
+/**
+ * Loads specific model into the viewer.
+ * @param {Autodesk.Viewing.GuiViewer3D} viewer Instance of the viewer to load the model into.
+ * @param {string} urn URN (base64-encoded object ID) of the model to be loaded.
+ */
 function loadModel(viewer, urn) {
     function onDocumentLoadSuccess(doc) {
         viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
@@ -65,5 +67,6 @@ function loadModel(viewer, urn) {
         alert('Could not load model. See the console for more details.');
         console.error(message);
     }
+    window.location.hash = urn;
     Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
 }
