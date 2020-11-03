@@ -1,4 +1,4 @@
-const { AuthClientTwoLegged, BucketsApi, ObjectsApi } = require('forge-apis');
+const { AuthClientTwoLegged, BucketsApi, ObjectsApi, DerivativesApi } = require('forge-apis');
 
 const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
 if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
@@ -7,7 +7,7 @@ if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
 }
 const BUCKET = FORGE_BUCKET || `${FORGE_CLIENT_ID.toLowerCase()}-basic-app`;
 const PUBLIC_TOKEN_SCOPES = ['viewables:read'];
-const INTERNAL_TOKEN_SCOPES = ['bucket:read', 'bucket:create', 'data:read'];
+const INTERNAL_TOKEN_SCOPES = ['bucket:read', 'bucket:create', 'data:read', 'data:write', 'data:create'];
 
 let _tokens = new Map();
 
@@ -32,6 +32,10 @@ async function getPublicToken() {
     return getAccessToken(PUBLIC_TOKEN_SCOPES);
 }
 
+function urnify(objectId) {
+    return Buffer.from(objectId).toString('base64').replace(/=/g, '');
+}
+
 async function listModels() {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
     let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
@@ -42,7 +46,7 @@ async function listModels() {
         objects = objects.concat(response.body.items);
     }
     return objects.map(obj => ({
-        id: Buffer.from(obj.objectId).toString('base64').replace(/=/g, ''),
+        id: urnify(obj.objectId),
         name: obj.objectKey
     }));
 }
@@ -60,8 +64,22 @@ async function ensureBucketExists() {
     }
 }
 
+async function uploadModel(objectName, buffer) {
+    const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
+    const response = await new ObjectsApi().uploadObject(BUCKET, objectName, buffer.byteLength, buffer, {}, null, token);
+    await new DerivativesApi().translate({
+        input: {
+            urn: urnify(response.body.objectId)
+        },
+        output: {
+            formats: [{ type: 'svf', views: ['2d', '3d'] }]
+        }
+    }, {}, null, token);
+}
+
 module.exports = {
     getPublicToken,
     listModels,
-    ensureBucketExists
+    ensureBucketExists,
+    uploadModel
 };
