@@ -1,42 +1,67 @@
-const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET } = process.env;
-const { AuthenticationClient, DataManagementClient, ModelDerivativeClient, DataRetentionPolicy, urnify } = require('forge-server-utils');
+const { AuthClientTwoLegged, BucketsApi, ObjectsApi } = require('forge-apis');
 
+const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
 if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
     console.warn('Missing some of the environment variables.');
     process.exit(1);
 }
+const BUCKET = FORGE_BUCKET || `${FORGE_CLIENT_ID.toLowerCase()}-basic-app`;
+const PUBLIC_TOKEN_SCOPES = ['viewables:read'];
+const INTERNAL_TOKEN_SCOPES = ['bucket:read', 'bucket:create', 'data:read'];
 
-const BUCKET = `${FORGE_CLIENT_ID.toLowerCase()}-myfirstapp`;
-let authClient = new AuthenticationClient(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET);
-let dataManagementClient = new DataManagementClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
-let modelDerivativeClient = new ModelDerivativeClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
+let _tokens = new Map();
 
-async function ensureBucketExists() {
-    const buckets = await dataManagementClient.listBuckets();
-    if (!buckets.find(bucket => bucket.bucketKey.toLowerCase() === BUCKET)) {
-        await dataManagementClient.createBucket(BUCKET, DataRetentionPolicy.Temporary);
+async function getAccessToken(scopes) {
+    const key = scopes.join(',');
+    let token = _tokens.get(key);
+    if (!token) {
+        const client = new AuthClientTwoLegged(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, scopes);
+        token = await client.authenticate();
+        token._expires_at = Date.now() + token.expires_in * 1000;
+        _tokens.set(key, token);
+        setTimeout(() => _tokens.delete(key), token.expires_in * 1000);
     }
+    return {
+        access_token: token.access_token,
+        token_type: token.token_type,
+        expires_in: Math.round((token._expires_at - Date.now()) / 1000)
+    };
 }
 
 async function getPublicToken() {
-    return authClient.authenticate(['viewables:read']);
+    return getAccessToken(PUBLIC_TOKEN_SCOPES);
 }
 
 async function listModels() {
-    const objects = await dataManagementClient.listObjects(BUCKET);
-    return objects.map(function (obj) {
-        return { id: urnify(obj.objectId), name: obj.objectKey };
-    });
+    const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
+    let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
+    let objects = response.body.items;
+    while (response.body.next) {
+        const startAt = new URL(response.body.next).searchParams.get('startAt');
+        response = await new ObjectsApi().getObjects(BUCKET, { limit: 64, startAt }, null, token);
+        objects = objects.concat(response.body.items);
+    }
+    return objects.map(obj => ({
+        id: Buffer.from(obj.objectId).toString('base64').replace(/=/g, ''),
+        name: obj.objectKey
+    }));
 }
 
-async function uploadAndTranslate(fileName, fileType, fileBuff, pathInZip) {
-    const object = await dataManagementClient.uploadObject(BUCKET, fileName, fileType, fileBuff);
-    await modelDerivativeClient.submitJob(urnify(object.objectId), [{ type: 'svf', views: ['2d', '3d'] }], pathInZip);
+async function ensureBucketExists() {
+    const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
+    try {
+        await new BucketsApi().getBucketDetails(BUCKET, null, token);
+    } catch (err) {
+        if (err.statusCode === 404) {
+            await new BucketsApi().createBucket({ bucketKey: BUCKET, policyKey: 'temporary' }, {}, null, token);
+        } else {
+            throw err;
+        }
+    }
 }
 
 module.exports = {
     getPublicToken,
-    ensureBucketExists,
     listModels,
-    uploadAndTranslate
+    ensureBucketExists
 };

@@ -1,10 +1,16 @@
 window.addEventListener('DOMContentLoaded', async function() {
-    const [viewer, ...rest] = await Promise.all([initViewer(), initSelectUI(), initUploadUI()]);
-    const designs = document.getElementById('designs');
-    designs.addEventListener('change', function () {
-        loadModel(viewer, designs.value);
+    const viewer = await initViewer();
+    const models = await initModelDropdown();
+    models.addEventListener('change', function () {
+        window.location.hash = models.value;
+        loadModel(viewer, models.value);
     });
-    loadModel(viewer, designs.value);
+    if (window.location.hash) {
+        models.value = window.location.hash.substr(1);
+    }
+    if (models.value) {
+        loadModel(viewer, models.value);
+    }
 });
 
 async function initViewer() {
@@ -15,7 +21,8 @@ async function initViewer() {
                 const token = await resp.json();
                 callback(token.access_token, token.expires_in);
             } else {
-                throw new Error(await resp.text());
+                alert('Could not obtain access token. See the console for more details.');
+                console.error(await resp.text());
             }
         }
     };
@@ -23,29 +30,16 @@ async function initViewer() {
         Autodesk.Viewing.Initializer(options, function () {
             const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
             viewer.start();
+            viewer.setTheme('light-theme');
             resolve(viewer);
         });
     });
 }
 
-async function loadModel(viewer, urn) {
-    return new Promise(function (resolve, reject) {
-        function onDocumentLoadSuccess(doc) {
-            viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
-            resolve();
-        }
-        function onDocumentLoadFailure(code, message) {
-            console.error('Could not load document.', message); // TODO: handle situations when the model is not yet translated
-            reject(message);
-        }
-        Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
-    });
-}
-
-async function initSelectUI() {
-    const designs = document.getElementById('designs');
-    designs.setAttribute('disabled', 'true');
-    designs.innerHTML = '';
+async function initModelDropdown() {
+    const models = document.getElementById('models');
+    models.setAttribute('disabled', 'true');
+    models.innerHTML = '';
     const resp = await fetch('/api/models');
     if (resp.ok) {
         const documents = await resp.json();
@@ -53,32 +47,23 @@ async function initSelectUI() {
             const option = document.createElement('option');
             option.innerText = doc.name;
             option.setAttribute('value', doc.id);
-            designs.appendChild(option);
+            models.appendChild(option);
         }
     } else {
+        alert('Could not list models. See the console for more details.');
         console.error(await resp.text());
     }
-    designs.removeAttribute('disabled');
+    models.removeAttribute('disabled');
+    return models;
 }
 
-async function initUploadUI() {
-    const input = document.getElementById('input');
-    const btn = document.getElementById('upload');
-    btn.addEventListener('click', async function () {
-        if (input.files.length > 0) {
-            const file = input.files[0];
-            let data = new FormData();
-            data.append('file', file);
-            if (file.name.endsWith('.zip')) {
-                const entrypoint = window.prompt('Please enter the name of the entry filename inside the ZIP archive.');
-                data.append('entrypoint-in-zip', entrypoint);
-            }
-            const resp = await fetch('/api/models', { method: 'POST', body: data });
-            if (resp.ok) {
-                initSelectUI();
-            } else {
-                console.error(await resp.text());
-            }
-        }
-    });
+function loadModel(viewer, urn) {
+    function onDocumentLoadSuccess(doc) {
+        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+    }
+    function onDocumentLoadFailure(code, message) {
+        alert('Could not load model. See the console for more details.');
+        console.error(message);
+    }
+    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
 }

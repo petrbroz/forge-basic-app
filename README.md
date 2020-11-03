@@ -2,44 +2,27 @@
 
 Sample application showing the basic usage of [Autodesk Forge](https://forge.autodesk.com).
 
-![Screenshot](./screenshot.jpg)
+![Screenshot](./screenshot.png)
 
-## Getting Started
+## Development
 
-- clone this repository
-- install dependencies: `npm install` or `yarn install`
-- setup environment variables
-  - on macOS/linux:
-    ```
-    export FORGE_CLIENT_ID=<your client id>
-    export FORGE_CLIENT_SECRET=<your client secret>
-    ```
-  - on Windows:
-    ```
-    set FORGE_CLIENT_ID=<your client id>
-    set FORGE_CLIENT_SECRET=<your client secret>
-    ```
-- run the server: `node server.js`
+### Prerequisites
 
-If you're using [Visual Studio Code](https://code.visualstudio.com),
-you can setup a launch task with all env. variables preconfigured:
+- [Register a Forge application](https://forge.autodesk.com/en/docs/oauth/v2/tutorials/create-app)
+- [Node.js](https://nodejs.org) (we recommend the Long Term Support version)
+- Terminal (for example, [Windows Command Prompt](https://en.wikipedia.org/wiki/Cmd.exe)
+or [macOS Terminal](https://support.apple.com/guide/terminal/welcome/mac))
 
-```
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Local Server",
-            "program": "${workspaceFolder}/server.js",
-            "env": {
-                "FORGE_CLIENT_ID": "<your client id>",
-                "FORGE_CLIENT_SECRET": "<your client secret>"
-            }
-        }
-    ]
-}
-```
+### Setup & Run
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+- Clone the repository
+- Install dependencies: `npm install`
+- Setup environment variables:
+  - `FORGE_CLIENT_ID` - your Forge application client ID
+  - `FORGE_CLIENT_SECRET` - your Forge application client secret
+  - `FORGE_BUCKET` (optional) - name of Forge bucket to store your designs
+- Run the server: `npm start`
+
+> When using [Visual Studio Code](https://code.visualstudio.com),
+you can specify the env. variables listed above in a _.env_ file in this
+folder, and run & debug the application directly from the editor.
