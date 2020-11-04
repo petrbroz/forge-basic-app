@@ -1,3 +1,13 @@
+/*
+ * Command-line script for one-time provisioning of the application.
+ * Usage:
+ *   node setup.js
+ * Environment variables:
+ *   FORGE_CLIENT_ID
+ *   FORGE_CLIENT_SECRET
+ *   FORGE_BUCKET (optional)
+ */
+
 const { ensureBucketExists } = require('./services/forge.js');
 
 async function setup() {

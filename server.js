@@ -1,3 +1,14 @@
+/*
+ * Command-line script for running the server application.
+ * Usage:
+ *   node server.js
+ * Environment variables:
+ *   FORGE_CLIENT_ID
+ *   FORGE_CLIENT_SECRET
+ *   FORGE_BUCKET (optional)
+ *   PORT (optional)
+ */
+
 const express = require('express');
 const PORT = process.env.PORT || 3000;
 
