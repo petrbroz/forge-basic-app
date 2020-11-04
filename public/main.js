@@ -2,13 +2,10 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();
     viewer.setTheme('light-theme');
-    const models = await initModelSelection();
-    models.addEventListener('change', () => loadModel(viewer, models.value));
+    setupModelSelection(viewer);
+    setupModelUpload(viewer);
     if (window.location.hash) {
-        models.value = window.location.hash.substr(1);
-    }
-    if (models.value) {
-        loadModel(viewer, models.value);
+        loadModel(viewer, window.location.hash.substr(1));
     }
 });
 
@@ -29,11 +26,11 @@ async function getAccessToken(callback) {
 }
 
 /**
- * Initializes the model selection UI.
+ * Initializes model selection UI. Can be called repeatedly to refresh the selection.
  * @async
- * @returns {Promise} The HTML select element populated with available models.
+ * @param {GuiViewer3D} viewer Forge Viewer instance.
  */
-async function initModelSelection() {
+async function setupModelSelection(viewer) {
     const models = document.getElementById('models');
     models.setAttribute('disabled', 'true');
     models.innerHTML = '';
@@ -51,7 +48,49 @@ async function initModelSelection() {
         console.error(await resp.text());
     }
     models.removeAttribute('disabled');
-    return models;
+    models.onchange = () => loadModel(viewer, models.value);
+    if (!viewer.model && models.value) {
+        loadModel(viewer, models.value);
+    }
+}
+
+/**
+ * Initializes model upload UI.
+ * @async
+ * @param {GuiViewer3D} viewer Forge Viewer instance.
+ */
+async function setupModelUpload(viewer) {
+    const button = document.getElementById('upload');
+    const input = document.getElementById('input');
+    button.addEventListener('click', async function () {
+        input.click();
+    });
+    input.addEventListener('change', async function () {
+        if (input.files.length !== 1) {
+            return;
+        }
+        const file = input.files[0];
+        let data = new FormData();
+        data.append('model-name', file.name);
+        data.append('model-file', file);
+        // When uploading a zip file, ask for the main design file in the archive
+        if (file.name.endsWith('.zip')) {
+            const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
+            data.append('model-zip-entrypoint', entrypoint);
+        }
+        button.setAttribute('disabled', 'true');
+        button.innerText = 'Uploading ...';
+        const resp = await fetch('/api/models', { method: 'POST', body: data });
+        if (resp.ok) {
+            input.value = '';
+            setupModelSelection(viewer);
+        } else {
+            alert('Could not upload model. See the console for more details.');
+            console.error(await resp.text());
+        }
+        button.innerText = 'Upload';
+        button.removeAttribute('disabled');
+    });
 }
 
 /**

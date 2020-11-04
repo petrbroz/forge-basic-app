@@ -23,9 +23,11 @@ body, html {
 #header > * {
     margin-left: 0.5em;
     margin-right: 0.5em;
+    font-family: ArtifaktElement;
+    font-size: 1em;
 }
 
-#header .logo {
+#header .logo, #models, #upload {
     height: 2em;
 }
 
@@ -36,8 +38,10 @@ body, html {
 #models {
     min-width: 0; /* Reset the input's "intrinsic" width */
     flex: 0 1 auto;
-    font-family: ArtifaktElement;
-    font-size: 1em;
+}
+
+#upload {
+    margin-left: 0;
 }
 
 #preview {
