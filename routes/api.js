@@ -1,7 +1,8 @@
 const fs = require('fs');
 const express = require('express');
+const webpush = require('web-push');
 const formidable = require('express-formidable');
-const { getPublicToken, listModels, uploadModel } = require('../services/forge.js');
+const { getPublicToken, listModels, uploadModel, translateModel } = require('../services/forge.js');
 
 let router = express.Router();
 
@@ -32,10 +33,23 @@ router.post('/api/models', formidable(), async (req, res) => {
         return;
     }
     try {
-        await uploadModel(
-            req.fields['model-name'],
-            fs.readFileSync(req.files['model-file'].path),
-            req.fields['model-zip-entrypoint']);
+        const objectId = await uploadModel(req.fields['model-name'], fs.readFileSync(req.files['model-file'].path));
+        // Kick-off the model translation, and report the result via a push notification
+        translateModel(objectId, req.fields['model-zip-entrypoint'])
+            .then(status => {
+                console.log('Model translation finished with status', status);
+                const subscriptions = req.app.get('subs');
+                if (subscriptions) {
+                    const payload = JSON.stringify({ title: 'test' });
+                    for (const subscription of subscriptions) {
+                        webpush.sendNotification(subscription, payload)
+                            .catch(error => console.error(error.stack));
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Model translation failed', err);
+            });
         res.status(200).end();
     } catch (err) {
         console.error(err);

@@ -84,33 +84,51 @@ async function ensureBucketExists() {
 }
 
 /**
- * Uploads a model and starts its conversion for the viewer.
+ * Uploads a model to the Data Management service.
  * @async
  * @param {string} objectName How the model should be named in the Data Management service.
  * @param {Buffer} buffer Content of the uploaded file.
- * @param {string} [rootFilename] Optional name of the main design file when uploading a ZIP archive.
+ * @returns {Promise} ID of the uploaded object in the Data Management service.
  */
-async function uploadModel(objectName, buffer, rootFilename) {
+async function uploadModel(objectName, buffer) {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
     const response = await new ObjectsApi().uploadObject(BUCKET, objectName, buffer.byteLength, buffer, {}, null, token);
+    return response.body.objectId;
+}
+
+/**
+ * Converts a model into the SVF format used by Forge Viewer.
+ * @async
+ * @param {string} objectId ID of the object in the Data Management service.
+ * @param {string} [rootFilename] Optional name of the main design file when uploading a ZIP archive.
+ */
+async function translateModel(objectId, rootFilename) {
+    const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
+    const client = new DerivativesApi();
+    const urn = urnify(objectId);
     const job = {
-        input: {
-            urn: urnify(response.body.objectId)
-        },
-        output: {
-            formats: [{ type: 'svf', views: ['2d', '3d'] }]
-        }
+        input: { urn },
+        output: { formats: [{ type: 'svf', views: ['2d', '3d'] }] }
     };
     if (rootFilename) {
         job.input.compressedUrn = true;
         job.input.rootFilename = rootFilename;
     }
-    await new DerivativesApi().translate(job, {}, null, token);
+    await client.translate(job, {}, null, token);
+    let response = await client.getManifest(urn, {}, null, token);
+    while (response.body.status === 'pending' || response.body.status === 'inprogress') {
+        await delay(5000);
+        response = await client.getManifest(urn, {}, null, token);
+    }
+    return response.body.status;
 }
+
+const delay = (ms) => new Promise(function (resolve) { setTimeout(resolve, ms); });
 
 module.exports = {
     getPublicToken,
     listModels,
     ensureBucketExists,
-    uploadModel
+    uploadModel,
+    translateModel
 };
