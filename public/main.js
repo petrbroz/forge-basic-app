@@ -95,6 +95,39 @@ async function setupModelUpload(viewer) {
 }
 
 /**
+ * Sets up push notifications when new models are available for viewing.
+ * @async
+ */
+async function setupNotifications(vapidPublicKey) {
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+            });
+            await fetch('/push/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(subscription),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+}
+
+/**
  * Loads specific model into the viewer.
  * @param {Autodesk.Viewing.GuiViewer3D} viewer Instance of the viewer to load the model into.
  * @param {string} urn URN (base64-encoded object ID) of the model to be loaded.

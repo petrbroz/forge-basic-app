@@ -40,7 +40,7 @@ router.post('/api/models', formidable(), async (req, res) => {
                 console.log('Model translation finished with status', status);
                 const subscriptions = req.app.get('subs');
                 if (subscriptions) {
-                    const payload = JSON.stringify({ title: 'test' });
+                    const payload = JSON.stringify({ name: req.fields['model-name'], status });
                     for (const subscription of subscriptions) {
                         webpush.sendNotification(subscription, payload)
                             .catch(error => console.error(error.stack));
