@@ -1,0 +1,15 @@
+{
+    "name": "Forge Basic App",
+    "short_name": "FBA",
+    "description": "Sample application showing the basic usage of Autodesk Forge.",
+    "icons": [
+        {
+            "src": "/logo.png",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/",
+    "display": "fullscreen",
+    "theme_color": "#ffa835",
+    "background_color": "#ffffff"
+}
