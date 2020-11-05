@@ -5,9 +5,6 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
-    if (urn) {
-        loadModel(viewer, urn);
-    }
 });
 
 /**
