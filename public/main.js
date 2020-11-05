@@ -5,6 +5,10 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
+    if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+        setupNotifications(registration.pushManager);
+    }
 });
 
 /**
@@ -96,9 +100,10 @@ async function setupModelUpload(viewer) {
 
 /**
  * Sets up push notifications when new models are available for viewing.
+ * @param {PushManager} pushManager
  * @async
  */
-async function setupNotifications(vapidPublicKey) {
+async function setupNotifications(pushManager) {
     function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -109,10 +114,11 @@ async function setupNotifications(vapidPublicKey) {
         }
         return outputArray;
     }
-    if ('serviceWorker' in navigator) {
+    const match = document.cookie.match(/VAPID_PUBLIC_KEY=([\w\d_\+\-\/]+)/);
+    if (match) {
+        const vapidPublicKey = match[1];
         try {
-            const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-            const subscription = await registration.pushManager.subscribe({
+            const subscription = await pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
             });
