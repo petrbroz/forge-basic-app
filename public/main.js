@@ -2,10 +2,11 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();
     viewer.setTheme('light-theme');
-    setupModelSelection(viewer);
+    const urn = window.location.hash ? window.location.hash.substr(1) : null;
+    setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
-    if (window.location.hash) {
-        loadModel(viewer, window.location.hash.substr(1));
+    if (urn) {
+        loadModel(viewer, urn);
     }
 });
 
@@ -29,8 +30,9 @@ async function getAccessToken(callback) {
  * Initializes model selection UI. Can be called repeatedly to refresh the selection.
  * @async
  * @param {GuiViewer3D} viewer Forge Viewer instance.
+ * @param {string} [selectedUrn] Optional model URN to mark as selected.
  */
-async function setupModelSelection(viewer) {
+async function setupModelSelection(viewer, selectedUrn) {
     const models = document.getElementById('models');
     models.setAttribute('disabled', 'true');
     models.innerHTML = '';
@@ -41,6 +43,9 @@ async function setupModelSelection(viewer) {
             const option = document.createElement('option');
             option.innerText = doc.name;
             option.setAttribute('value', doc.id);
+            if (doc.id === selectedUrn) {
+                option.setAttribute('selected', 'true');
+            }
             models.appendChild(option);
         }
     } else {
