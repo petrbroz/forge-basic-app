@@ -1,11 +1,12 @@
 {
     "name": "Forge Basic App",
-    "short_name": "FBA",
+    "short_name": "ForgeApp",
     "description": "Sample application showing the basic usage of Autodesk Forge.",
     "icons": [
         {
             "src": "/logo.png",
-            "type": "image/png"
+            "type": "image/png",
+            "sizes": "48x48 72x72 96x96 128x128 256x256"
         }
     ],
     "start_url": "/",
