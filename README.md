@@ -4,6 +4,8 @@ Sample application showing the basic usage of [Autodesk Forge](https://forge.aut
 
 ![Screenshot](./screenshot.png)
 
+Live demo: https://forge-basic-app.herokuapp.com
+
 ## Development
 
 ### Prerequisites
