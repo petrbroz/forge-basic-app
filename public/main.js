@@ -38,12 +38,11 @@ async function setupModelSelection(viewer, selectedUrn) {
     models.innerHTML = '';
     const resp = await fetch('/api/models');
     if (resp.ok) {
-        const documents = await resp.json();
-        for (const doc of documents) {
+        for (const model of await resp.json()) {
             const option = document.createElement('option');
-            option.innerText = doc.name;
-            option.setAttribute('value', doc.id);
-            if (doc.id === selectedUrn) {
+            option.innerText = model.name;
+            option.setAttribute('value', model.urn);
+            if (model.urn === selectedUrn) {
                 option.setAttribute('selected', 'true');
             }
             models.appendChild(option);

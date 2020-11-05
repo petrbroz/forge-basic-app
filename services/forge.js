@@ -48,7 +48,7 @@ async function getPublicToken() {
 /**
  * Lists all objects available in pre-configured bucket in the Data Management service.
  * @async
- * @returns {Promise} List of objects, each with properties `name` and `id` (containing the model's URN).
+ * @returns {Promise} List of objects, each with properties `name` and `urn` (base64-encoded object ID).
  */
 async function listModels() {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
@@ -60,8 +60,8 @@ async function listModels() {
         objects = objects.concat(response.body.items);
     }
     return objects.map(obj => ({
-        id: urnify(obj.objectId),
-        name: obj.objectKey
+        name: obj.objectKey,
+        urn: urnify(obj.objectId)
     }));
 }
 
