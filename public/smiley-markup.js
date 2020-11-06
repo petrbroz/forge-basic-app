@@ -10,10 +10,12 @@ class MarkupSmiley extends avemc.Markup {
         this.bindDomEvents();
     }
 
+    // Get a new edit mode object for this markup type.
     getEditMode() {
         return new EditModeSmiley(this.editor);
     }
 
+    // Compute SVG path based on the markup's parameters.
     getPath() {
         const { size } = this;
         if (size.x === 1 || size.y === 1) {
@@ -45,10 +47,12 @@ class MarkupSmiley extends avemc.Markup {
         return path;
     }
 
+    // Update the markup's transform properties.
     set(position, size) {
         this.setSize(position, size.x, size.y);
     }
 
+    // Update the markup's SVG shape based on its style and transform properties.
     updateStyle() {
         const { style, shape } = this;
         const path = this.getPath().join(' ');
@@ -66,6 +70,7 @@ class MarkupSmiley extends avemc.Markup {
         avemcu.updateMarkupPathSvgHitarea(shape, this.editor);
     }
 
+    // Store the markup's type, transforms, and styles in its SVG shape.
     setMetadata() {
         const metadata = avemcu.cloneStyle(this.style);
         metadata.type = this.type;
@@ -163,7 +168,7 @@ class SmileyCreateAction extends avemc.EditAction {
     }
 }
 
-class SmileyUpdateAction extends Autodesk.Viewing.Extensions.Markups.Core.EditAction {
+class SmileyUpdateAction extends avemc.EditAction {
     constructor(editor, smiley, position, size) {
         super(editor, 'UPDATE-SMILEY', smiley.id);
         this.newPosition = { x: position.x, y: position.y };
@@ -213,7 +218,7 @@ class SmileyUpdateAction extends Autodesk.Viewing.Extensions.Markups.Core.EditAc
     }
 }
 
-class SmileyDeleteAction extends Autodesk.Viewing.Extensions.Markups.Core.EditAction {
+class SmileyDeleteAction extends avemc.EditAction {
     constructor(editor, smiley) {
         super(editor, 'DELETE-SMILEY', smiley.id);
         this.createSmiley = new SmileyCreateAction(
