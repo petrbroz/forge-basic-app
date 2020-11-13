@@ -1,3 +1,5 @@
+/// import * as Autodesk from "@types/forge-viewer";
+
 Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();

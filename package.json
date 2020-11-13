@@ -12,6 +12,9 @@
   ],
   "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
+  "devDependencies": {
+    "@types/forge-viewer": "^7.5.7"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "express-formidable": "^1.2.0",
