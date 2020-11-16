@@ -1,6 +1,12 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
-Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
+const options = {
+    env: 'MD20ProdUS',
+    api: 'D3S',
+    getAccessToken
+};
+
+Autodesk.Viewing.Initializer(options, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();
     viewer.setTheme('light-theme');
