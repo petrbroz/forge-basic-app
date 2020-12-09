@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "FORGE_CLIENT_ID": "",
+    "FORGE_CLIENT_SECRET": "",
+    "FORGE_BUCKET": ""
+  }
+}

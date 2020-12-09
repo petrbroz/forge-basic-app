@@ -1,14 +1,18 @@
 {
   "name": "forge-basic-app",
   "version": "1.0.0",
-  "description": "Sample application showing the basic usage of Autodesk Forge.",
+  "description": "Sample application showing basic usage of Autodesk Forge, backed by Azure Functions.",
   "scripts": {
-    "start": "node setup.js && node server.js"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prestart": "npm run build",
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
   },
   "keywords": [
     "autodesk",
     "forge",
-    "express"
+    "azure"
   ],
   "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
@@ -16,8 +20,8 @@
     "@types/forge-viewer": "^7.5.7"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "express-formidable": "^1.2.0",
-    "forge-apis": "^0.7.3"
+    "@azure/functions": "^1.2.2",
+    "forge-server-utils": "^8.2.1",
+    "typescript": "^4.1.2"
   }
 }

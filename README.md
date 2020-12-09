@@ -4,8 +4,6 @@ Sample application showing the basic usage of [Autodesk Forge](https://forge.aut
 
 ![Screenshot](./screenshot.png)
 
-Live demo: https://forge-basic-app.herokuapp.com
-
 ## Development
 
 ### Prerequisites
@@ -15,16 +13,23 @@ Live demo: https://forge-basic-app.herokuapp.com
 - Terminal (for example, [Windows Command Prompt](https://en.wikipedia.org/wiki/Cmd.exe)
 or [macOS Terminal](https://support.apple.com/guide/terminal/welcome/mac))
 
-### Setup & Run
+### Getting Started
 
 - Clone the repository
+- Create a copy of the _local.settings.template.json_ file in the root folder,
+rename it to _local.settings.json_, and fill in the following settings:
+    - `FORGE_CLIENT_ID` - Client ID of your Forge application
+    - `FORGE_CLIENT_SECRET` - Client secret of your Forge application
+    - `FORGE_BUCKET` - Name of a bucket in the Forge Data Management service where your designs are (or will be) stored
+- Copy the _config.template.js_ file from the root folder into the _www_ subfolder,
+rename it to _config.js_, and fill in the following settings:
+    - `AZURE_FUNC_APP_URL` - URL (without the trailing "/" character) of the Azure Functions application where this code will be deployed
 - Install dependencies: `npm install`
-- Setup environment variables:
-  - `FORGE_CLIENT_ID` - your Forge application client ID
-  - `FORGE_CLIENT_SECRET` - your Forge application client secret
-  - `FORGE_BUCKET` (optional) - name of Forge bucket to store your designs
-- Run the server: `npm start`
 
-> When using [Visual Studio Code](https://code.visualstudio.com),
-you can specify the env. variables listed above in a _.env_ file in this
-folder, and run & debug the application directly from the editor.
+### Running locally (with Visual Studio Code)
+
+TODO
+
+### Deploying to Azure (with Visual Studio Code)
+
+TODO

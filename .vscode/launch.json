@@ -5,12 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Attach to Node Functions",
             "type": "node",
-            "request": "launch",
-            "name": "Launch Server",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["start"],
-            "envFile": "${workspaceFolder}/.env"
+            "request": "attach",
+            "port": 9229,
+            "preLaunchTask": "func: host start"
         }
     ]
 }

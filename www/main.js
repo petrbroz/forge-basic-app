@@ -15,7 +15,7 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
  * @param {function} callback Callback function to be called with access token and expiration time (in seconds).
  */
 async function getAccessToken(callback) {
-    const resp = await fetch('/api/auth/token');
+    const resp = await fetch(AZURE_FUNC_APP_URL + '/api/auth/token');
     if (resp.ok) {
         const { access_token, expires_in } = await resp.json();
         callback(access_token, expires_in);
@@ -35,7 +35,7 @@ async function setupModelSelection(viewer, selectedUrn) {
     const models = document.getElementById('models');
     models.setAttribute('disabled', 'true');
     models.innerHTML = '';
-    const resp = await fetch('/api/models');
+    const resp = await fetch(AZURE_FUNC_APP_URL + '/api/models');
     if (resp.ok) {
         for (const model of await resp.json()) {
             const option = document.createElement('option');
@@ -83,7 +83,7 @@ async function setupModelUpload(viewer) {
         }
         button.setAttribute('disabled', 'true');
         button.innerText = 'Uploading ...';
-        const resp = await fetch('/api/models', { method: 'POST', body: data });
+        const resp = await fetch(AZURE_FUNC_APP_URL + '/api/models', { method: 'POST', body: data });
         if (resp.ok) {
             input.value = '';
             setupModelSelection(viewer);
