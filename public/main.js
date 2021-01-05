@@ -1,7 +1,11 @@
+import { MyAwesomeExtension } from './MyAwesomeExtension.js';
+Autodesk.Viewing.theExtensionManager.registerExtension('MyAwesomeExtension', MyAwesomeExtension);
+
 /// import * as Autodesk from "@types/forge-viewer";
 
 Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+    const config = { extensions: ['MyAwesomeExtension'] };
+    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'), config);
     viewer.start();
     viewer.setTheme('light-theme');
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
