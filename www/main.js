@@ -74,13 +74,7 @@ async function setupModelUpload(viewer) {
         }
         const file = input.files[0];
         let data = new FormData();
-        data.append('model-name', file.name);
         data.append('model-file', file);
-        // When uploading a zip file, ask for the main design file in the archive
-        if (file.name.endsWith('.zip')) {
-            const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
-            data.append('model-zip-entrypoint', entrypoint);
-        }
         button.setAttribute('disabled', 'true');
         button.innerText = 'Uploading ...';
         const resp = await fetch(AZURE_FUNC_APP_URL + '/api/models', { method: 'POST', body: data });
