@@ -22,14 +22,5 @@ rename it to _local.settings.json_, and fill in the following settings:
     - `FORGE_CLIENT_SECRET` - Client secret of your Forge application
     - `FORGE_BUCKET` - Name of a bucket in the Forge Data Management service where your designs are (or will be) stored
 - Copy the _config.template.js_ file from the root folder into the _www_ subfolder,
-rename it to _config.js_, and fill in the following settings:
-    - `AZURE_FUNC_APP_URL` - URL (without the trailing "/" character) of the Azure Functions application where this code will be deployed
+rename it to _config.js_, and replace the `<Your Azure Function App URL>` placeholder in the script with the URL (without the trailing "/" character) of the Function app where the Azure Functions will be deployed
 - Install dependencies: `npm install`
-
-### Running locally (with Visual Studio Code)
-
-TODO
-
-### Deploying to Azure (with Visual Studio Code)
-
-TODO
