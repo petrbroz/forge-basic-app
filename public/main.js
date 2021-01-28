@@ -102,8 +102,25 @@ async function setupModelUpload(viewer) {
  * @param {string} urn URN (base64-encoded object ID) of the model to be loaded.
  */
 function loadModel(viewer, urn) {
+    const spinner = document.createElement('div');
+    spinner.style.position = 'absolute';
+    spinner.style.left = 0;
+    spinner.style.top = 0;
+    spinner.style.width = '100%';
+    spinner.style.height = '100%';
+    spinner.style.zIndex = 1;
+    spinner.style.background = 'darkgray';
+    spinner.style.color = 'white';
+    spinner.style.textAlign = 'center';
+    spinner.style.fontSize = '4em';
+    spinner.innerText = 'Loading ...';
+    document.getElementById('preview').appendChild(spinner);
+
     function onDocumentLoadSuccess(doc) {
         viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+        viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
+            document.getElementById('preview').removeChild(spinner);
+        });
     }
     function onDocumentLoadFailure(code, message) {
         alert('Could not load model. See the console for more details.');
