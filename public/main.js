@@ -5,7 +5,8 @@ Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     viewer.start();
     viewer.setTheme('light-theme');
     await viewer.loadExtension('Autodesk.glTF');
-    viewer.loadModel('models/rac_basic_sample_project/gltf/model.gltf');
+    //viewer.loadModel('models/rac_basic_sample_project/gltf/model.gltf');
+    viewer.loadModel('models/Sponza/glTF/Sponza.gltf');
 });
 
 /**
