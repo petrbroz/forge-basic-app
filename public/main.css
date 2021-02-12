@@ -27,23 +27,12 @@ body, html {
     font-size: 1em;
 }
 
-#header .logo, #models, #upload {
+#header .logo {
     height: 2em;
 }
 
 #header .title {
     flex: 1 0 auto;
-}
-
-#models {
-    min-width: 0; /* Reset the input's "intrinsic" width */
-    flex: 0 1 auto;
-}
-
-#upload {
-    margin-left: 0;
-    font-weight: bold;
-    width: 2em;
 }
 
 #preview {
