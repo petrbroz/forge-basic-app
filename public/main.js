@@ -1,13 +1,24 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
-Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
-    viewer.start();
-    viewer.setTheme('light-theme');
-    const urn = window.location.hash ? window.location.hash.substr(1) : null;
-    setupModelSelection(viewer, urn);
-    setupModelUpload(viewer);
-});
+// Setup the UI depending on whether a user has logged in (see /api/auth/profile.js)
+if (USER) {
+    if (USER.name) {
+        document.getElementById('logout').innerText = `Log Out (${USER.name})`;
+    }
+    document.getElementById('login').style.display = 'none';
+    Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
+        const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+        viewer.start();
+        viewer.setTheme('light-theme');
+        const urn = window.location.hash ? window.location.hash.substr(1) : null;
+        setupModelSelection(viewer, urn);
+        setupModelUpload(viewer);
+    });
+} else {
+    document.getElementById('logout').style.display = 'none';
+    document.getElementById('models').style.display = 'none';
+    document.getElementById('upload').style.display = 'none';
+}
 
 /**
  * Retrieves access token required for viewing models.

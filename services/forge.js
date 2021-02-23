@@ -1,11 +1,10 @@
 const { AuthClientTwoLegged, BucketsApi, ObjectsApi, DerivativesApi } = require('forge-apis');
 
 const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
-if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
+if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET || !FORGE_BUCKET) {
     console.warn('Missing some of the environment variables.');
     process.exit(1);
 }
-const BUCKET = FORGE_BUCKET || `${FORGE_CLIENT_ID.toLowerCase()}-basic-app`;
 const PUBLIC_TOKEN_SCOPES = ['viewables:read'];
 const INTERNAL_TOKEN_SCOPES = ['bucket:read', 'bucket:create', 'data:read', 'data:write', 'data:create'];
 
@@ -46,53 +45,38 @@ async function getPublicToken() {
 }
 
 /**
- * Lists all objects available in pre-configured bucket in the Data Management service.
+ * Lists all objects available in pre-configured bucket in the Data Management service for a specific user ID.
  * @async
+ * @param {string} userId User ID to filter available objects.
  * @returns {Promise} List of objects, each with properties `name` and `urn` (base64-encoded object ID).
  */
-async function listModels() {
+async function listModels(userId) {
+    const prefix = userId + '/';
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
-    let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
+    let response = await new ObjectsApi().getObjects(FORGE_BUCKET, { limit: 64, beginsWith: prefix }, null, token);
     let objects = response.body.items;
     while (response.body.next) {
         const startAt = new URL(response.body.next).searchParams.get('startAt');
-        response = await new ObjectsApi().getObjects(BUCKET, { limit: 64, startAt }, null, token);
+        response = await new ObjectsApi().getObjects(FORGE_BUCKET, { limit: 64, startAt }, null, token);
         objects = objects.concat(response.body.items);
     }
     return objects.map(obj => ({
-        name: obj.objectKey,
+        name: obj.objectKey.replace(prefix, ''),
         urn: urnify(obj.objectId)
     }));
 }
 
 /**
- * Checks whether the pre-configured bucket already exists in the Data Management service,
- * and if not, attempts to create it.
+ * Uploads a model for a specific user and starts its conversion for the viewer.
  * @async
- */
-async function ensureBucketExists() {
-    const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
-    try {
-        await new BucketsApi().getBucketDetails(BUCKET, null, token);
-    } catch (err) {
-        if (err.statusCode === 404) {
-            await new BucketsApi().createBucket({ bucketKey: BUCKET, policyKey: 'temporary' }, {}, null, token);
-        } else {
-            throw err;
-        }
-    }
-}
-
-/**
- * Uploads a model and starts its conversion for the viewer.
- * @async
+ * @param {string} userId User ID.
  * @param {string} objectName How the model should be named in the Data Management service.
  * @param {Buffer} buffer Content of the uploaded file.
  * @param {string} [rootFilename] Optional name of the main design file when uploading a ZIP archive.
  */
-async function uploadModel(objectName, buffer, rootFilename) {
+async function uploadModel(userId, objectName, buffer, rootFilename) {
     const token = await getAccessToken(INTERNAL_TOKEN_SCOPES);
-    const response = await new ObjectsApi().uploadObject(BUCKET, objectName, buffer.byteLength, buffer, {}, null, token);
+    const response = await new ObjectsApi().uploadObject(FORGE_BUCKET, userId + '/' + objectName, buffer.byteLength, buffer, {}, null, token);
     const job = {
         input: {
             urn: urnify(response.body.objectId)
@@ -111,6 +95,5 @@ async function uploadModel(objectName, buffer, rootFilename) {
 module.exports = {
     getPublicToken,
     listModels,
-    ensureBucketExists,
     uploadModel
 };
