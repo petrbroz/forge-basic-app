@@ -13,7 +13,7 @@
   "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/forge-viewer": "^7.5.7"
+    "@types/forge-viewer": "^7.39.0"
   },
   "dependencies": {
     "express": "^4.17.1",
