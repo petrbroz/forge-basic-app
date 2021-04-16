@@ -5,8 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- Forge Viewer -->
     <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css" type="text/css">
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.1.0/dist/chart.min.js"></script>
     <link rel="stylesheet" href="/main.css">
     <title>Autodesk Forge: My First App</title>
 </head>
@@ -20,7 +23,15 @@
         <input style="display: none" type="file" id="input">
     </div>
     <div id="preview"></div>
-    <script src="/main.js"></script>
+    <div id="sidebar">
+        <div>
+            <canvas id="bar-chart"></canvas>
+        </div>
+        <div>
+            <canvas id="pie-chart"></canvas>
+        </div>
+    </div>
+    <script type="module" src="/main.js"></script>
 </body>
 
 </html>

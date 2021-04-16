@@ -13,6 +13,7 @@
   "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/chart.js": "^2.9.32",
     "@types/forge-viewer": "^7.39.0"
   },
   "dependencies": {

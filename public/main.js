@@ -1,29 +1,15 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
-Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
-    viewer.start();
-    viewer.setTheme('light-theme');
+import { initializeViewer, loadModel } from './viewer.js';
+import { initializeDashboard } from './dashboard.js';
+
+window.addEventListener('DOMContentLoaded', async function () {
+    const viewer = await initializeViewer(document.getElementById('preview'));
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
+    initializeDashboard(viewer);
 });
-
-/**
- * Retrieves access token required for viewing models.
- * @async
- * @param {function} callback Callback function to be called with access token and expiration time (in seconds).
- */
-async function getAccessToken(callback) {
-    const resp = await fetch('/api/auth/token');
-    if (resp.ok) {
-        const { access_token, expires_in } = await resp.json();
-        callback(access_token, expires_in);
-    } else {
-        alert('Could not obtain access token. See the console for more details.');
-        console.error(await resp.text());
-    }
-}
 
 /**
  * Initializes model selection UI. Can be called repeatedly to refresh the selection.
@@ -51,8 +37,12 @@ async function setupModelSelection(viewer, selectedUrn) {
         console.error(await resp.text());
     }
     models.removeAttribute('disabled');
-    models.onchange = () => loadModel(viewer, models.value);
+    models.onchange = () => {
+        window.location.hash = models.value;
+        loadModel(viewer, models.value);
+    }
     if (!viewer.model && models.value) {
+        window.location.hash = models.value;
         loadModel(viewer, models.value);
     }
 }
@@ -94,21 +84,4 @@ async function setupModelUpload(viewer) {
         button.innerText = 'Upload';
         button.removeAttribute('disabled');
     });
-}
-
-/**
- * Loads specific model into the viewer.
- * @param {Autodesk.Viewing.GuiViewer3D} viewer Instance of the viewer to load the model into.
- * @param {string} urn URN (base64-encoded object ID) of the model to be loaded.
- */
-function loadModel(viewer, urn) {
-    function onDocumentLoadSuccess(doc) {
-        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
-    }
-    function onDocumentLoadFailure(code, message) {
-        alert('Could not load model. See the console for more details.');
-        console.error(message);
-    }
-    window.location.hash = urn;
-    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
 }

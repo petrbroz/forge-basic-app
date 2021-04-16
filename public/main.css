@@ -48,7 +48,25 @@ body, html {
 
 #preview {
     position: absolute;
-    width: 100%;
+    width: 66%;
     height: calc(100% - 3em);
     top: 3em;
+    left: 0;
+}
+
+#sidebar {
+    position: absolute;
+    width: 34%;
+    height: calc(100% - 3em);
+    top: 3em;
+    right: 0;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: stretch;
+    align-items: stretch;
+}
+
+#sidebar > * {
+    flex: 1;
+    padding: 0.5em;
 }
