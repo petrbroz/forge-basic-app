@@ -21,10 +21,10 @@
  * @param {HTMLElement} container Hosting element.
  * @returns {Promise} Promise that is resolved with an instance of Forge Viewer.
  */
-export async function initializeViewer(container) {
+export async function initializeViewer(container, config) {
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(container);
+            const viewer = new Autodesk.Viewing.GuiViewer3D(container, config);
             viewer.start();
             viewer.setTheme('light-theme');
             resolve(viewer);

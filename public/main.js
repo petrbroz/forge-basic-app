@@ -2,9 +2,12 @@
 
 import { initializeViewer, loadModel } from './viewer.js';
 import { initializeDashboard } from './dashboard.js';
+import { SummaryExtension } from './summary-extension.js';
+
+Autodesk.Viewing.theExtensionManager.registerExtension('SummaryExtension', SummaryExtension);
 
 window.addEventListener('DOMContentLoaded', async function () {
-    const viewer = await initializeViewer(document.getElementById('preview'));
+    const viewer = await initializeViewer(document.getElementById('preview'), { extensions: ['SummaryExtension'] });
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
