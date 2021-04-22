@@ -27,7 +27,7 @@ body, html {
     font-size: 1em;
 }
 
-#header .logo, #models, #upload {
+#header .logo {
     height: 2em;
 }
 
@@ -35,20 +35,18 @@ body, html {
     flex: 1 0 auto;
 }
 
-#models {
-    min-width: 0; /* Reset the input's "intrinsic" width */
-    flex: 0 1 auto;
+#viewers {
+    height: calc(100vh - 2em);
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
 }
 
-#upload {
-    margin-left: 0;
-    font-weight: bold;
-    width: 2em;
-}
-
-#preview {
-    position: absolute;
-    width: 100%;
-    height: calc(100% - 3em);
-    top: 3em;
+.viewer {
+    position: relative;
+    width: 40%;
+    height: 30%;
+    border: 1px solid gray;
+    box-shadow: 2px 2px rgba(0, 0, 0, 0.2);
 }
