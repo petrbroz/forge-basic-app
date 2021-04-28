@@ -2,7 +2,7 @@ class MaterialSwatchExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._swatch = null;
-        this._urn = 'dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6YnJvenAtZGVidWctcGVyc2lzdGVkL21hdGVyaWFscy12Ni5mM2Q'; // Use your own swatch model URN
+        this._urn = 'dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6YnJvenAtZGVidWctcGVyc2lzdGVkL21hdGVyaWFscy12Nyhzb2xpZCUyMHdvb2RzKS5mM2Q'; // Use your own swatch model URN
     }
 
     load() {
@@ -18,24 +18,24 @@ class MaterialSwatchExtension extends Autodesk.Viewing.Extension {
      * @async
      * @returns {Map} Mapping of preset names to instances of THREE.Material.
      */
-    async getSwatches() {
+    async getPresets() {
         if (!this._swatch) {
             this._swatch = await this._loadSwatchModel(this._urn);
         }
-        const swatches = new Map();
+        const presets = new Map();
         const tree = this._swatch.getInstanceTree();
         const frags = this._swatch.getFragmentList();
         tree.enumNodeChildren(tree.getRootId(), function (dbid) {
             if (tree.getChildCount(dbid) === 0) {
                 const name = tree.getNodeName(dbid);
                 tree.enumNodeFragments(dbid, function (fragid) {
-                    if (!swatches.has(name)) {
-                        swatches.set(name, frags.getMaterial(fragid));
+                    if (!presets.has(name)) {
+                        presets.set(name, frags.getMaterial(fragid));
                     }
                 }, true);
             }
         }, true);
-        return swatches;
+        return presets;
     }
 
     /**
@@ -45,13 +45,13 @@ class MaterialSwatchExtension extends Autodesk.Viewing.Extension {
      * @param {Autodesk.Viewing.Model} targetModel Model that contains the object to be modified.
      * @param {number} targetObjectId DbID of the object to be modified.
      */
-    async applySwatch(name, targetModel, targetObjectId) {
-        const swatches = await this.getSwatches();
-        if (!swatches.has(name)) {
+    async applyPreset(name, targetModel, targetObjectId) {
+        const presets = await this.getPresets();
+        if (!presets.has(name)) {
             console.error('Material swatch not found', name);
             return;
         }
-        const material = swatches.get(name);
+        const material = presets.get(name);
         const tree = targetModel.getInstanceTree();
         const frags = targetModel.getFragmentList();
         tree.enumNodeFragments(targetObjectId, function (fragid) {

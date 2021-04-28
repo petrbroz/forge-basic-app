@@ -64,10 +64,10 @@ class MaterialSwatchPanel extends Autodesk.Viewing.UI.PropertyPanel {
         super.setVisible(show);
         if (show) {
             this.addProperty('Loading', '...', 'Materials');
-            this._materialSwatchExt.getSwatches()
-                .then(swatches => {
+            this._materialSwatchExt.getPresets()
+                .then(presets => {
                     this.removeAllProperties();
-                    for (const key of swatches.keys()) {
+                    for (const key of presets.keys()) {
                         this.addProperty(key, 'Apply to selection', 'Materials');
                     }
                 })
@@ -76,15 +76,10 @@ class MaterialSwatchPanel extends Autodesk.Viewing.UI.PropertyPanel {
     }
 
     async onPropertyClick(prop) {
-        const swatches = await this._materialSwatchExt.getSwatches();
-        if (!swatches.has(prop.name)) {
-            console.error('Material swatch not found', prop.name);
-            return;
-        }
         const selections = this._materialSwatchExt.viewer.getAggregateSelection();
         for (const group of selections) {
             for (const dbid of group.selection) {
-                this._materialSwatchExt.applySwatch(prop.name, group.model, dbid);
+                this._materialSwatchExt.applyPreset(prop.name, group.model, dbid);
             }
         }
         this._materialSwatchExt.viewer.clearSelection();
