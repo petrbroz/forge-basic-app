@@ -52,3 +52,10 @@ body, html {
     height: calc(100% - 3em);
     top: 3em;
 }
+
+#material-swatch-button {
+    background-image: url(https://static.thenounproject.com/png/3891447-200.png);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
