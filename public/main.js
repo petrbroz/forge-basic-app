@@ -1,6 +1,12 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
-Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
+const options = {
+    shouldInitializeAuth: false,
+    endpoint: window.location.origin + '/viewer-proxy',
+    api: 'derivativeV2'
+};
+
+Autodesk.Viewing.Initializer(options, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();
     viewer.setTheme('light-theme');
