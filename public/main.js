@@ -8,9 +8,9 @@ const options = {
 
 // Override `PropDbLoader#load` so that the svf1/svf2 dbid mapping is always loaded.
 const _load = Autodesk.Viewing.Private.PropDbLoader.prototype.load;
-Autodesk.Viewing.Private.PropDbLoader.prototype.load = function (result) {
+Autodesk.Viewing.Private.PropDbLoader.prototype.load = function () {
     this.needsDbIdRemap = true;
-    _load.call(this, result);
+    _load.call(this);
 }
 
 // Override `PropDbLoader#processLoadResult` so that the dbid mapping is stored within all models (by default it is only stored in 2D models).
