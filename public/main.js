@@ -1,19 +1,30 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
 Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-    const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+    const container = document.getElementById('preview');
+    const config = { extensions: ['Autodesk.DataVisualization'] };
+    const viewer = new Autodesk.Viewing.GuiViewer3D(container, config);
     viewer.start();
-    viewer.setTheme('light-theme');
-    const urn = window.location.hash ? window.location.hash.substr(1) : null;
-    setupModelSelection(viewer, urn);
-    setupModelUpload(viewer);
+
+    const params = new URLSearchParams(window.location.search);
+    const urn = params.get('urn');
+    const guid = params.get('guid');
+    if (urn && guid) {
+        loadModel(viewer, urn, guid);
+        viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function (ev) {
+            setupHeatmaps(viewer, ev.model);
+        });
+    } else {
+        container.innerText = `
+            <h1>Missing URN</h1>
+            <p>
+                Provide the URN of one of your models as the <code>urn</code> query parameter,
+                and the GUID of a specific viewable as the <code>guid</code> query parameter.
+            </p>
+        `;
+    }
 });
 
-/**
- * Retrieves access token required for viewing models.
- * @async
- * @param {function} callback Callback function to be called with access token and expiration time (in seconds).
- */
 async function getAccessToken(callback) {
     const resp = await fetch('/api/auth/token');
     if (resp.ok) {
@@ -25,90 +36,60 @@ async function getAccessToken(callback) {
     }
 }
 
-/**
- * Initializes model selection UI. Can be called repeatedly to refresh the selection.
- * @async
- * @param {GuiViewer3D} viewer Forge Viewer instance.
- * @param {string} [selectedUrn] Optional model URN to mark as selected.
- */
-async function setupModelSelection(viewer, selectedUrn) {
-    const models = document.getElementById('models');
-    models.setAttribute('disabled', 'true');
-    models.innerHTML = '';
-    const resp = await fetch('/api/models');
-    if (resp.ok) {
-        for (const model of await resp.json()) {
-            const option = document.createElement('option');
-            option.innerText = model.name;
-            option.setAttribute('value', model.urn);
-            if (model.urn === selectedUrn) {
-                option.setAttribute('selected', 'true');
-            }
-            models.appendChild(option);
+function loadModel(viewer, urn, guid) {
+    return new Promise(function (resolve, reject) {
+        function onDocumentLoadSuccess(doc) {
+            viewer.loadDocumentNode(doc, doc.getRoot().findByGuid(guid))
+                .then(model => resolve(model));
         }
-    } else {
-        alert('Could not list models. See the console for more details.');
-        console.error(await resp.text());
-    }
-    models.removeAttribute('disabled');
-    models.onchange = () => loadModel(viewer, models.value);
-    if (!viewer.model && models.value) {
-        loadModel(viewer, models.value);
-    }
-}
-
-/**
- * Initializes model upload UI.
- * @async
- * @param {GuiViewer3D} viewer Forge Viewer instance.
- */
-async function setupModelUpload(viewer) {
-    const button = document.getElementById('upload');
-    const input = document.getElementById('input');
-    button.addEventListener('click', async function () {
-        input.click();
-    });
-    input.addEventListener('change', async function () {
-        if (input.files.length !== 1) {
-            return;
+        function onDocumentLoadFailure(code, message) {
+            reject(message);
         }
-        const file = input.files[0];
-        let data = new FormData();
-        data.append('model-name', file.name);
-        data.append('model-file', file);
-        // When uploading a zip file, ask for the main design file in the archive
-        if (file.name.endsWith('.zip')) {
-            const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
-            data.append('model-zip-entrypoint', entrypoint);
-        }
-        button.setAttribute('disabled', 'true');
-        button.innerText = 'Uploading ...';
-        const resp = await fetch('/api/models', { method: 'POST', body: data });
-        if (resp.ok) {
-            input.value = '';
-            setupModelSelection(viewer);
-        } else {
-            alert('Could not upload model. See the console for more details.');
-            console.error(await resp.text());
-        }
-        button.innerText = 'Upload';
-        button.removeAttribute('disabled');
+        Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
     });
 }
 
-/**
- * Loads specific model into the viewer.
- * @param {Autodesk.Viewing.GuiViewer3D} viewer Instance of the viewer to load the model into.
- * @param {string} urn URN (base64-encoded object ID) of the model to be loaded.
- */
-function loadModel(viewer, urn) {
-    function onDocumentLoadSuccess(doc) {
-        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+async function setupHeatmaps(viewer, model) {
+    const dataVizExt = viewer.getExtension('Autodesk.DataVisualization');
+    const devices = [
+        {
+            id: 'Sala de Reuniones',
+            position: { x: -21.6, y: -15.5, z: 0.3 },
+            sensorTypes: ['temperature', 'humidity'],
+        },
+        {
+            id: 'Oficina',
+            position: { x: -26.7, y: 2.0, z: 0.3 },
+            sensorTypes: ['temperature', 'humidity'],
+        },
+    ];
+    const sensorColors = [0x0000ff, 0x00ff00, 0xffff00, 0xff0000];
+    const sensorType = 'temperature';
+
+    const structureInfo = new Autodesk.DataVisualization.Core.ModelStructureInfo(model); // Obtain room info from the model
+    const shadingData = await structureInfo.generateSurfaceShadingData(devices); // Map devices to rooms
+    await dataVizExt.setupSurfaceShading(model, shadingData); // Build heatmaps for rooms with at least one device in them
+    dataVizExt.registerSurfaceShadingColors(sensorType, sensorColors);
+
+    function getSensorValue(surfaceShadingPoint, sensorType) {
+        console.log('Reading sensor value for', surfaceShadingPoint, sensorType);
+        return Math.random();
     }
-    function onDocumentLoadFailure(code, message) {
-        alert('Could not load model. See the console for more details.');
-        console.error(message);
-    }
-    window.location.hash = urn;
-    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+
+    setInterval(function () {
+        const floorName = 'A1_Level 1';
+        dataVizExt.renderSurfaceShading(floorName, sensorType, getSensorValue);
+    }, 1000);
+}
+
+function getObjectBounds(model, dbid) {
+    const tree = model.getInstanceTree();
+    const frags = model.getFragmentList();
+    let bounds = new THREE.Box3();
+    tree.enumNodeFragments(dbid, function (fragid) {
+        let _bounds = new THREE.Box3();
+        frags.getWorldBounds(fragid, _bounds);
+        bounds.union(_bounds);
+    }, true);
+    return bounds;
 }
