@@ -48,7 +48,15 @@ body, html {
 
 #preview {
     position: absolute;
-    width: 100%;
-    height: calc(100% - 3em);
+    width: 800px;
+    height: 600px;
     top: 3em;
+}
+
+#thumbnail-viewer, #thumbnail-output {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    height: 400px;
 }

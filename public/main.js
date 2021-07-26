@@ -1,11 +1,42 @@
+/** @type {Autodesk.Viewing.GuiViewer3D} */
+let thumbnailViewer;
+
 Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
     const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
     viewer.start();
     viewer.setTheme('light-theme');
+
+    thumbnailViewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('thumbnail-viewer'));
+    thumbnailViewer.start();
+    thumbnailViewer.setTheme('light-theme');
+
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
-    setupModelUpload(viewer);
+
+    document.getElementById('take-screenshot').addEventListener('click', async function () {
+        const ids = viewer.getSelection();
+        const blob = await takeScreenshot(window.location.hash.substr(1), ids);
+        window.open(blob, '_blank');
+    });
 });
+
+function takeScreenshot(urn, ids) {
+    return new Promise(function (resolve, reject) {
+        function onDocumentLoadSuccess(doc) {
+            thumbnailViewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry(), { ids });
+            thumbnailViewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
+                thumbnailViewer.fitToView(ids, null, true);
+                thumbnailViewer.getScreenShot(400, 400, blob => {
+                    resolve(blob);
+                });
+            });
+        }
+        function onDocumentLoadError(err) {
+            reject(err);
+        }
+        Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadError);
+    });
+}
 
 /**
  * Retrieves access token required for viewing models.
@@ -53,45 +84,6 @@ async function setupModelSelection(viewer, selectedUrn) {
     if (!viewer.model && models.value) {
         loadModel(viewer, models.value);
     }
-}
-
-/**
- * Initializes model upload UI.
- * @async
- * @param {GuiViewer3D} viewer Forge Viewer instance.
- */
-async function setupModelUpload(viewer) {
-    const button = document.getElementById('upload');
-    const input = document.getElementById('input');
-    button.addEventListener('click', async function () {
-        input.click();
-    });
-    input.addEventListener('change', async function () {
-        if (input.files.length !== 1) {
-            return;
-        }
-        const file = input.files[0];
-        let data = new FormData();
-        data.append('model-name', file.name);
-        data.append('model-file', file);
-        // When uploading a zip file, ask for the main design file in the archive
-        if (file.name.endsWith('.zip')) {
-            const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
-            data.append('model-zip-entrypoint', entrypoint);
-        }
-        button.setAttribute('disabled', 'true');
-        button.innerText = 'Uploading ...';
-        const resp = await fetch('/api/models', { method: 'POST', body: data });
-        if (resp.ok) {
-            input.value = '';
-            setupModelSelection(viewer);
-        } else {
-            alert('Could not upload model. See the console for more details.');
-            console.error(await resp.text());
-        }
-        button.innerText = 'Upload';
-        button.removeAttribute('disabled');
-    });
 }
 
 /**
